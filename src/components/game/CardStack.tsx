@@ -82,6 +82,8 @@ export function CardStack({ columnIndex, cards, slot, hintedCardInstanceId }: Ca
     : -1
 
   const isDropTarget = canPlaceToSlot || canStackHere
+  // ステージ1のみカテゴリ一致のヒントを色で表示する
+  const hintsEnabled = (gameState?.stageId ?? 1) === 1
 
   const CARD_H = 72  // カード1枚の高さ(px)
   const PEEK   = 18  // 重なったカードの見える幅(px)
@@ -94,7 +96,7 @@ export function CardStack({ columnIndex, cards, slot, hintedCardInstanceId }: Ca
     <div
       className={`
         relative w-full rounded-xl
-        ${isDropTarget ? 'ring-2 ring-yellow-400/60 cursor-pointer' : 'cursor-default'}
+        ${isDropTarget ? `cursor-pointer${hintsEnabled ? ' ring-2 ring-yellow-400/60' : ''}` : 'cursor-default'}
         transition-all duration-150
       `}
       style={{ height: stackHeight, minHeight: 56 }}
@@ -107,11 +109,11 @@ export function CardStack({ columnIndex, cards, slot, hintedCardInstanceId }: Ca
         <div
           className={`
             absolute inset-0 rounded-xl border-2 border-dashed flex items-center justify-center
-            ${isDropTarget ? 'border-yellow-400/70 bg-yellow-400/5' : 'border-green-700/50'}
+            ${isDropTarget && hintsEnabled ? 'border-yellow-400/70 bg-yellow-400/5' : 'border-green-700/50'}
           `}
         >
-          <span className={isDropTarget ? 'text-yellow-400/70 text-xs' : 'text-green-700 text-xs'}>
-            {isDropTarget ? 'ここに移動' : '空'}
+          <span className={isDropTarget && hintsEnabled ? 'text-yellow-400/70 text-xs' : 'text-green-700 text-xs'}>
+            {isDropTarget && hintsEnabled ? 'ここに移動' : '空'}
           </span>
         </div>
       ) : (

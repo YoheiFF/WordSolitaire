@@ -37,6 +37,8 @@ export function CategorySlot({ slot, slotIndex, hintedSlotIndex }: CategorySlotP
     slot.placedCards.length + selectedGroup.length <= slot.totalExpected
 
   const isClickable = selectedCard !== null && (canPlaceCategoryCard || canPlaceNormalCard)
+  // ステージ1のみカテゴリ一致のヒントを色で表示する
+  const hintsEnabled = (gameState?.stageId ?? 1) === 1
 
   const handlePlace = () => {
     if (canPlaceCategoryCard) {
@@ -72,8 +74,10 @@ export function CategorySlot({ slot, slotIndex, hintedSlotIndex }: CategorySlotP
         className={`
           flex flex-col items-center justify-center rounded-xl h-20 w-full
           border-2 border-dashed
-          ${isClickable
+          ${isClickable && hintsEnabled
             ? 'border-yellow-400 cursor-pointer bg-yellow-400/5 hover:bg-yellow-400/15'
+            : isClickable
+            ? 'border-green-600/50 cursor-pointer bg-transparent'
             : 'border-green-600/50 bg-transparent'}
           ${isHinted ? 'border-orange-400 animate-pulse bg-orange-400/10' : ''}
           transition-all duration-150
@@ -94,7 +98,7 @@ export function CategorySlot({ slot, slotIndex, hintedSlotIndex }: CategorySlotP
         relative rounded-xl h-20 w-full overflow-hidden shadow-md
         ${isClickable ? 'cursor-pointer' : ''}
         ${isHinted ? 'ring-2 ring-orange-400 animate-pulse' : ''}
-        ${isClickable && !isHinted ? 'ring-2 ring-yellow-400/80' : ''}
+        ${isClickable && !isHinted && hintsEnabled ? 'ring-2 ring-yellow-400/80' : ''}
         transition-all duration-150 active:scale-95
       `}
       style={{

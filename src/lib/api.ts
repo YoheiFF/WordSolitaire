@@ -1,4 +1,4 @@
-import type { StageData, StageListItem, SaveProgressPayload } from '@/types/game'
+import type { StageData, StageListItem, SaveProgressPayload, ProgressRecord } from '@/types/game'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? ''
 
@@ -13,6 +13,13 @@ export async function fetchStageList(): Promise<StageListItem[]> {
 export async function fetchStageDetail(stageId: number): Promise<StageData> {
   const res = await fetch(`${API_BASE}/api/stages?id=${stageId}`)
   if (!res.ok) throw new Error(`Failed to fetch stage ${stageId}`)
+  return res.json()
+}
+
+/** プレイヤー進捗を取得 */
+export async function fetchProgress(playerId: string): Promise<ProgressRecord[]> {
+  const res = await fetch(`${API_BASE}/api/progress?playerId=${encodeURIComponent(playerId)}`)
+  if (!res.ok) throw new Error('Failed to fetch progress')
   return res.json()
 }
 

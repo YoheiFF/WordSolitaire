@@ -138,11 +138,23 @@ export function GameContainer() {
             おめでとうございます！<br />
             残り手数: <span className="font-bold text-green-600">{gameState.movesLeft}</span>
           </p>
+          {gameState.stageId < 30 ? (
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => router.push(`/play/${gameState.stageId + 1}`)}
+              className="w-full"
+            >
+              次のステージへ ▶
+            </Button>
+          ) : (
+            <p className="text-yellow-600 font-bold text-center">🏆 全ステージクリア！</p>
+          )}
           <div className="flex gap-3 w-full">
             <Button variant="secondary" size="md" onClick={handleGoHome} className="flex-1">
               ホームへ
             </Button>
-            <Button variant="primary" size="md" onClick={handleRetry} className="flex-1">
+            <Button variant="secondary" size="md" onClick={handleRetry} className="flex-1">
               もう一度
             </Button>
           </div>

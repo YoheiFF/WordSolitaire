@@ -68,7 +68,7 @@ export function GameContainer() {
   }
 
   return (
-    <div className="relative flex flex-col gap-2 w-full max-w-sm mx-auto px-2 pb-4 min-h-screen">
+    <div className="relative flex flex-col gap-1.5 w-full max-w-sm mx-auto px-2 pb-2 min-h-dvh">
       <DragOverlay />
       {/* ヘッダー */}
       <GameHeader

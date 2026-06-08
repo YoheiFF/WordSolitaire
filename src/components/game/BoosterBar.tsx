@@ -48,7 +48,7 @@ export function BoosterBar({ hintUsed, maxHints, historyCount }: BoosterBarProps
       >
         <span className="text-lg">↩️</span>
         <span className="text-xs text-green-700 font-medium">
-          アンドゥ ({historyCount})
+          1つ戻る ({historyCount})
         </span>
       </Button>
 

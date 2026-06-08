@@ -88,7 +88,7 @@ export function CategorySlot({ slot, slotIndex, hintedSlotIndex }: CategorySlotP
         animate={shakeAnim}
         transition={shakeTrans}
         className={`
-          flex flex-col items-center justify-center rounded-xl h-24 w-full
+          flex flex-col items-center justify-center rounded-xl h-[84px] w-full
           border-2 border-dashed
           ${isClickable && hintsEnabled
             ? 'border-yellow-400 cursor-pointer bg-yellow-400/5 hover:bg-yellow-400/15'
@@ -114,7 +114,7 @@ export function CategorySlot({ slot, slotIndex, hintedSlotIndex }: CategorySlotP
       animate={shakeAnim}
       transition={shakeTrans}
       className={`
-        relative rounded-xl h-24 w-full overflow-hidden shadow-md
+        relative rounded-xl h-[84px] w-full overflow-hidden shadow-md
         ${isClickable ? 'cursor-pointer' : ''}
         ${isHinted ? 'ring-2 ring-orange-400 animate-pulse' : ''}
         ${isClickable && !isHinted && hintsEnabled ? 'ring-2 ring-yellow-400/80' : ''}

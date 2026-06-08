@@ -451,6 +451,39 @@ export function checkGameEnd(state: GameState): GameState {
     return { ...state, status: 'failed' }
   }
 
+  // デッドロック検知: 山札空 & 裏向きカードなし & 全表向きカードに有効手なし
+  if (state.mainDeck.length === 0 && totalPlaced < state.totalNormalCards) {
+    const hasFaceDownInStacks = state.columnStacks.some((col) =>
+      col.some((c) => c.face === 'face_down')
+    )
+    if (!hasFaceDownInStacks) {
+      const faceUpCards: PlayCard[] = []
+      if (state.centerDeck.length > 0) {
+        const t = state.centerDeck[state.centerDeck.length - 1]
+        if (t.face === 'face_up') faceUpCards.push(t)
+      }
+      for (const col of state.columnStacks) {
+        if (col.length > 0 && col[col.length - 1].face === 'face_up') {
+          faceUpCards.push(col[col.length - 1])
+        }
+      }
+      if (faceUpCards.length > 0) {
+        const hasValidMove = faceUpCards.some((card) => {
+          if (card.data.type === 'category') {
+            return state.categorySlots.some((s) => s.state === 'locked')
+          }
+          return state.categorySlots.some(
+            (s) =>
+              s.state === 'empty' &&
+              s.category?.id === card.data.categoryId &&
+              s.placedCards.length < s.totalExpected
+          )
+        })
+        if (!hasValidMove) return { ...state, status: 'failed' }
+      }
+    }
+  }
+
   return state
 }
 

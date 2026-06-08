@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useRef } from 'react'
 import { motion } from 'framer-motion'
 import type { PlayCard } from '@/types/game'
 
@@ -26,6 +26,52 @@ export function GameCard({
   const isFaceUp = card.face === 'face_up'
   const isCategory = card.data.type === 'category'
 
+  // タッチドラッグ用
+  const touchRef = useRef({ moved: false, startX: 0, startY: 0 })
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isSelectable) return
+    const t = e.touches[0]
+    touchRef.current = { moved: false, startX: t.clientX, startY: t.clientY }
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isSelectable) return
+    const t = e.touches[0]
+    if (!touchRef.current.moved &&
+        Math.hypot(t.clientX - touchRef.current.startX, t.clientY - touchRef.current.startY) > 8) {
+      touchRef.current.moved = true
+      if (!isSelected) onClick?.()
+    }
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!isSelectable) return
+    if (!touchRef.current.moved) {
+      touchRef.current = { moved: false, startX: 0, startY: 0 }
+      return
+    }
+    // ドラッグ終了: 後続のclickイベントを抑制し、ドロップ先を探す
+    e.preventDefault()
+    const t = e.changedTouches[0]
+    const { clientX, clientY } = t
+    touchRef.current = { moved: false, startX: 0, startY: 0 }
+
+    // React再レンダー後にドロップ先を検出してclickを発火
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const els = document.elementsFromPoint?.(clientX, clientY)
+          ?? ([document.elementFromPoint(clientX, clientY)].filter(Boolean) as Element[])
+        for (const el of els) {
+          if (el instanceof HTMLElement && el.dataset.dropZone) {
+            el.click()
+            break
+          }
+        }
+      })
+    })
+  }
+
   const cardBase = 'w-full h-full rounded-xl shadow-md overflow-hidden relative select-none'
 
   const selectedStyle = isSelected ? 'ring-2 ring-yellow-400 ring-offset-1 scale-105' : ''
@@ -43,7 +89,14 @@ export function GameCard({
         ${selectableStyle}
         transition-all duration-150
       `}
+      style={{
+        touchAction: isSelectable ? 'none' : 'auto',
+        WebkitTouchCallout: 'none' as React.CSSProperties['WebkitTouchCallout'],
+      }}
       onClick={isSelectable && onClick ? (e) => { e.stopPropagation(); onClick() } : undefined}
+      onTouchStart={isSelectable ? handleTouchStart : undefined}
+      onTouchMove={isSelectable ? handleTouchMove : undefined}
+      onTouchEnd={isSelectable ? handleTouchEnd : undefined}
       whileTap={isSelectable ? { scale: 0.95 } : undefined}
       transition={{ type: 'spring', damping: 20, stiffness: 300 }}
       role={isSelectable ? 'button' : undefined}

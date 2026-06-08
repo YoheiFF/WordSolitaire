@@ -59,6 +59,7 @@ export function CategorySlot({ slot, slotIndex, hintedSlotIndex }: CategorySlotP
   }
 
   const sharedProps = {
+    'data-drop-zone': 'true',
     onClick: handlePlace,
     onDragOver: handleDragOver,
     onDrop: handleDrop,

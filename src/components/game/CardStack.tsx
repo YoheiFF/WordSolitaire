@@ -98,6 +98,7 @@ export function CardStack({ columnIndex, cards, slot, hintedCardInstanceId }: Ca
         transition-all duration-150
       `}
       style={{ height: stackHeight, minHeight: 56 }}
+      data-drop-zone="true"
       onClick={handleStackAreaClick}
       onDragOver={handleDragOver}
       onDrop={handleDrop}

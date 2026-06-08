@@ -1,6 +1,7 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
+import { motion } from 'framer-motion'
 import { GameCard } from './GameCard'
 import type { PlayCard, CategorySlot } from '@/types/game'
 import { useGameStore } from '@/store/gameStore'
@@ -14,6 +15,12 @@ interface CardStackProps {
 
 export function CardStack({ columnIndex, cards, slot, hintedCardInstanceId }: CardStackProps) {
   const { gameState, selectCard, placeToColumnStack, stackCardOnColumn } = useGameStore()
+  const [shakeKey, setShakeKey] = useState(0)
+
+  const triggerShake = () => {
+    setShakeKey((k) => k + 1)
+    navigator.vibrate?.(80)
+  }
   const selectedCard = gameState?.selectedCard ?? null
   const selectedSource = gameState?.selectedCardSource ?? null
 
@@ -54,9 +61,9 @@ export function CardStack({ columnIndex, cards, slot, hintedCardInstanceId }: Ca
 
   const handleStackAreaClick = () => {
     if (!selectedCard) return
-    // 列への積み重ねを優先、できない場合のみカテゴリスロットへ配置
     if (canStackHere) stackCardOnColumn(columnIndex)
     else if (canPlaceToSlot) placeToColumnStack(columnIndex)
+    else triggerShake()
   }
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -93,11 +100,14 @@ export function CardStack({ columnIndex, cards, slot, hintedCardInstanceId }: Ca
     : (cards.length - 1) * PEEK + CARD_H
 
   return (
-    <div
+    <motion.div
+      key={shakeKey}
+      animate={shakeKey > 0 ? { x: [0, -8, 8, -5, 5, -2, 2, 0] } : { x: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
       className={`
         relative w-full rounded-xl
         ${isDropTarget ? `cursor-pointer${hintsEnabled ? ' ring-2 ring-yellow-400/60' : ''}` : 'cursor-default'}
-        transition-all duration-150
+        transition-colors duration-150
       `}
       style={{ height: stackHeight, minHeight: 56 }}
       data-drop-zone="true"
@@ -141,6 +151,6 @@ export function CardStack({ columnIndex, cards, slot, hintedCardInstanceId }: Ca
           )
         })
       )}
-    </div>
+    </motion.div>
   )
 }

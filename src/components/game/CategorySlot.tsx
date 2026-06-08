@@ -1,6 +1,7 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
+import { motion } from 'framer-motion'
 import type { CategorySlot as CategorySlotType, PlayCard } from '@/types/game'
 import { useGameStore } from '@/store/gameStore'
 
@@ -37,14 +38,21 @@ export function CategorySlot({ slot, slotIndex, hintedSlotIndex }: CategorySlotP
     slot.placedCards.length + selectedGroup.length <= slot.totalExpected
 
   const isClickable = selectedCard !== null && (canPlaceCategoryCard || canPlaceNormalCard)
-  // ステージ1のみカテゴリ一致のヒントを色で表示する
   const hintsEnabled = (gameState?.stageId ?? 1) === 1
+
+  const [shakeKey, setShakeKey] = useState(0)
+  const triggerShake = () => {
+    setShakeKey((k) => k + 1)
+    navigator.vibrate?.(80)
+  }
 
   const handlePlace = () => {
     if (canPlaceCategoryCard) {
       placeToCategorySlot(slotIndex)
     } else if (canPlaceNormalCard) {
       placeToColumnStack(slotIndex)
+    } else if (selectedCard !== null) {
+      triggerShake()
     }
   }
 
@@ -67,10 +75,16 @@ export function CategorySlot({ slot, slotIndex, hintedSlotIndex }: CategorySlotP
     onDrop: handleDrop,
   }
 
+  const shakeAnim = shakeKey > 0 ? { x: [0, -8, 8, -5, 5, -2, 2, 0] } : { x: 0 }
+  const shakeTrans = { duration: 0.4, ease: 'easeOut' as const }
+
   // locked: カテゴリカードを置くと開放されるプレースホルダー
   if (slot.state === 'locked') {
     return (
-      <div
+      <motion.div
+        key={shakeKey}
+        animate={shakeAnim}
+        transition={shakeTrans}
         className={`
           flex flex-col items-center justify-center rounded-xl h-20 w-full
           border-2 border-dashed
@@ -80,26 +94,29 @@ export function CategorySlot({ slot, slotIndex, hintedSlotIndex }: CategorySlotP
             ? 'border-green-600/50 cursor-pointer bg-transparent'
             : 'border-green-600/50 bg-transparent'}
           ${isHinted ? 'border-orange-400 animate-pulse bg-orange-400/10' : ''}
-          transition-all duration-150
+          transition-colors duration-150
         `}
         {...sharedProps}
       >
         <span className="text-green-500/70 text-lg">＋</span>
         <span className="text-green-500/60 text-[10px]">カテゴリ</span>
-      </div>
+      </motion.div>
     )
   }
 
   // empty / filled: カード画像を使ったカード形状
   const isFilled = slot.state === 'filled'
   return (
-    <div
+    <motion.div
+      key={shakeKey}
+      animate={shakeAnim}
+      transition={shakeTrans}
       className={`
         relative rounded-xl h-20 w-full overflow-hidden shadow-md
         ${isClickable ? 'cursor-pointer' : ''}
         ${isHinted ? 'ring-2 ring-orange-400 animate-pulse' : ''}
         ${isClickable && !isHinted && hintsEnabled ? 'ring-2 ring-yellow-400/80' : ''}
-        transition-all duration-150 active:scale-95
+        transition-colors duration-150 active:scale-95
       `}
       style={{
         backgroundImage: 'url(/images/category_card.png)',
@@ -126,6 +143,6 @@ export function CategorySlot({ slot, slotIndex, hintedSlotIndex }: CategorySlotP
       {isFilled && (
         <div className="absolute inset-0 bg-yellow-400/15 rounded-xl" />
       )}
-    </div>
+    </motion.div>
   )
 }

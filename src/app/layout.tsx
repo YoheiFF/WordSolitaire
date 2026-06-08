@@ -20,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className="min-h-dvh bg-green-800 overflow-x-hidden">
+      <body className="min-h-dvh overflow-x-hidden">
         {children}
       </body>
     </html>

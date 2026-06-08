@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { GameCard } from './GameCard'
 import type { PlayCard, CategorySlot } from '@/types/game'
 import { useGameStore } from '@/store/gameStore'
+import { useDragStore } from '@/store/dragStore'
 
 interface CardStackProps {
   columnIndex: number
@@ -75,6 +76,7 @@ export function CardStack({ columnIndex, cards, slot, hintedCardInstanceId }: Ca
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
+    useDragStore.getState().clearDrag()
     handleStackAreaClick()
   }
 
@@ -92,8 +94,8 @@ export function CardStack({ columnIndex, cards, slot, hintedCardInstanceId }: Ca
   // ステージ1のみカテゴリ一致のヒントを色で表示する
   const hintsEnabled = (gameState?.stageId ?? 1) === 1
 
-  const CARD_H = 72  // カード1枚の高さ(px)
-  const PEEK   = 18  // 重なったカードの見える幅(px)
+  const CARD_H = 88  // カード1枚の高さ(px)
+  const PEEK   = 22  // 重なったカードの見える幅(px)
 
   const stackHeight = cards.length === 0
     ? 56

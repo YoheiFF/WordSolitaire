@@ -18,7 +18,7 @@ export function MainDeck({ cards, onClick, disabled = false }: MainDeckProps) {
     <div className="flex flex-col items-center gap-1">
       <motion.div
         className={`
-          w-14 h-20 rounded-xl flex flex-col items-center justify-center
+          w-16 h-24 rounded-xl flex flex-col items-center justify-center
           border-2 shadow-md select-none
           ${isEmpty
             ? 'bg-green-900/40 border-dashed border-green-700 opacity-50'
@@ -38,7 +38,7 @@ export function MainDeck({ cards, onClick, disabled = false }: MainDeckProps) {
         ) : (
           <>
             {/* 重なり効果 */}
-            <div className="relative w-10 h-14">
+            <div className="relative w-12 h-16">
               {count > 2 && (
                 <div className="absolute inset-0 translate-y-1 translate-x-0.5 bg-green-600 rounded-lg border border-green-500" />
               )}

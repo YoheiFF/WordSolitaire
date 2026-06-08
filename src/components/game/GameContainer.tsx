@@ -10,6 +10,7 @@ import { CardStackArea } from './CardStackArea'
 import { BoosterBar } from './BoosterBar'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
+import { DragOverlay } from '@/components/ui/DragOverlay'
 import { useGameStore, selectHistory } from '@/store/gameStore'
 import { saveProgress } from '@/lib/api'
 import { useBgm } from '@/hooks/useBgm'
@@ -68,6 +69,7 @@ export function GameContainer() {
 
   return (
     <div className="relative flex flex-col gap-2 w-full max-w-sm mx-auto px-2 pb-4 min-h-screen">
+      <DragOverlay />
       {/* ヘッダー */}
       <GameHeader
         movesLeft={gameState.movesLeft}

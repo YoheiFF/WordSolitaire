@@ -5,6 +5,17 @@
   --foreground: #ffffff;
 }
 
+/* 固定背景（iOS Safari の background-attachment: fixed バグ回避） */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url('/images/base.png');
+  background-size: cover;
+  background-position: center;
+  z-index: -1;
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);

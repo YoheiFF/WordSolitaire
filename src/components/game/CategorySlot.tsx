@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import type { CategorySlot as CategorySlotType, PlayCard } from '@/types/game'
 import { useGameStore } from '@/store/gameStore'
+import { useDragStore } from '@/store/dragStore'
 
 interface CategorySlotProps {
   slot: CategorySlotType
@@ -65,6 +66,7 @@ export function CategorySlot({ slot, slotIndex, hintedSlotIndex }: CategorySlotP
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
+    useDragStore.getState().clearDrag()
     handlePlace()
   }
 
@@ -86,7 +88,7 @@ export function CategorySlot({ slot, slotIndex, hintedSlotIndex }: CategorySlotP
         animate={shakeAnim}
         transition={shakeTrans}
         className={`
-          flex flex-col items-center justify-center rounded-xl h-20 w-full
+          flex flex-col items-center justify-center rounded-xl h-24 w-full
           border-2 border-dashed
           ${isClickable && hintsEnabled
             ? 'border-yellow-400 cursor-pointer bg-yellow-400/5 hover:bg-yellow-400/15'
@@ -98,8 +100,8 @@ export function CategorySlot({ slot, slotIndex, hintedSlotIndex }: CategorySlotP
         `}
         {...sharedProps}
       >
-        <span className="text-green-500/70 text-lg">＋</span>
-        <span className="text-green-500/60 text-[10px]">カテゴリ</span>
+        <span className="text-green-500/70 text-2xl">＋</span>
+        <span className="text-green-500/60 text-xs">カテゴリ</span>
       </motion.div>
     )
   }
@@ -112,7 +114,7 @@ export function CategorySlot({ slot, slotIndex, hintedSlotIndex }: CategorySlotP
       animate={shakeAnim}
       transition={shakeTrans}
       className={`
-        relative rounded-xl h-20 w-full overflow-hidden shadow-md
+        relative rounded-xl h-24 w-full overflow-hidden shadow-md
         ${isClickable ? 'cursor-pointer' : ''}
         ${isHinted ? 'ring-2 ring-orange-400 animate-pulse' : ''}
         ${isClickable && !isHinted && hintsEnabled ? 'ring-2 ring-yellow-400/80' : ''}
@@ -129,10 +131,10 @@ export function CategorySlot({ slot, slotIndex, hintedSlotIndex }: CategorySlotP
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 px-1">
         {slot.category && (
           <>
-            <span className="text-red-900 font-bold text-[11px] text-center leading-tight break-words w-full text-center">
+            <span className="text-red-900 font-bold text-sm text-center leading-tight break-words w-full text-center">
               {slot.category.name}
             </span>
-            <span className={`text-[10px] font-medium ${isFilled ? 'text-yellow-600' : 'text-red-700/70'}`}>
+            <span className={`text-xs font-medium ${isFilled ? 'text-yellow-600' : 'text-red-700/70'}`}>
               {slot.placedCards.length}/{slot.totalExpected}
             </span>
           </>

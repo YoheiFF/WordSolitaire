@@ -12,6 +12,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { useGameStore, selectHistory } from '@/store/gameStore'
 import { saveProgress } from '@/lib/api'
+import { useBgm } from '@/hooks/useBgm'
 
 const PLAYER_ID_KEY = 'word-solitaire-player-id'
 
@@ -34,6 +35,8 @@ export function GameContainer() {
 
   const isCleared = gameState?.status === 'cleared'
   const isFailed = gameState?.status === 'failed'
+
+  useBgm('/audio/bgm.mp3')
 
   // クリア・失敗時に進捗を保存
   useEffect(() => {

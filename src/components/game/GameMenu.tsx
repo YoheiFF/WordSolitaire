@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useSettingsStore } from '@/store/settingsStore'
 
 interface GameMenuProps {
   onRestart: () => void
@@ -10,7 +11,7 @@ interface GameMenuProps {
 
 export function GameMenu({ onRestart, onGoHome }: GameMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [volume, setVolume] = useState(70)
+  const { bgmVolume, setBgmVolume } = useSettingsStore()
 
   const close = () => setIsOpen(false)
 
@@ -96,46 +97,36 @@ export function GameMenu({ onRestart, onGoHome }: GameMenuProps) {
 
                 <div className="border-t border-white/10 my-1" />
 
-                {/* 音量調整 */}
+                {/* BGM音量 */}
                 <div className="px-4 py-3.5 rounded-2xl bg-white/10">
                   <div className="flex items-center gap-3 mb-3">
                     <span className="text-2xl">
-                      {volume === 0 ? '🔇' : volume < 40 ? '🔈' : volume < 80 ? '🔉' : '🔊'}
+                      {bgmVolume === 0 ? '🔇' : bgmVolume < 40 ? '🔈' : bgmVolume < 80 ? '🔉' : '🔊'}
                     </span>
                     <div className="flex-1">
                       <p className="text-white font-semibold text-sm">BGM音量</p>
                     </div>
-                    <span className="text-white/60 text-sm tabular-nums">{volume}%</span>
+                    <span className="text-white/60 text-sm tabular-nums">{bgmVolume}%</span>
                   </div>
                   <input
                     type="range"
                     min={0}
                     max={100}
-                    value={volume}
-                    onChange={(e) => setVolume(Number(e.target.value))}
+                    value={bgmVolume}
+                    onChange={(e) => setBgmVolume(Number(e.target.value))}
                     className="w-full h-1.5 rounded-full accent-yellow-400 cursor-pointer"
                   />
-                  <p className="text-white/30 text-xs mt-2.5">※ BGMは現在未実装です</p>
                 </div>
 
-                {/* SE音量 */}
+                {/* SE音量（未実装） */}
                 <div className="px-4 py-3.5 rounded-2xl bg-white/10">
                   <div className="flex items-center gap-3 mb-3">
                     <span className="text-2xl">🎵</span>
                     <div className="flex-1">
                       <p className="text-white font-semibold text-sm">SE音量</p>
                     </div>
-                    <span className="text-white/60 text-sm tabular-nums">{volume}%</span>
                   </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={100}
-                    value={volume}
-                    onChange={(e) => setVolume(Number(e.target.value))}
-                    className="w-full h-1.5 rounded-full accent-yellow-400 cursor-pointer"
-                  />
-                  <p className="text-white/30 text-xs mt-2.5">※ SEは現在未実装です</p>
+                  <p className="text-white/30 text-xs">※ SEは現在未実装です</p>
                 </div>
 
               </div>

@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+:root {
+  --background: #1e4d25;
+  --foreground: #ffffff;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
+  min-height: 100dvh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* カード操作時のタップ最小領域 */
+button, [role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}

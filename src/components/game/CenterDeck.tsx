@@ -20,15 +20,11 @@ export function CenterDeck({ cards, hintedCardInstanceId }: CenterDeckProps) {
   const isSelected = selectedCard?.instanceId === topCard?.instanceId
 
   const allCategories = useGameStore(s => s.allCategories)
-  const categoryIdToTotal = new Map<number, number>()
   const categoryNameToTotal = new Map<string, number>()
   const slots = gameState?.categorySlots ?? []
   allCategories.forEach((cat, i) => {
     const slot = slots[i]
-    if (slot) {
-      categoryNameToTotal.set(cat.name, slot.totalExpected)
-      if (slot.state !== 'locked') categoryIdToTotal.set(cat.id, slot.totalExpected)
-    }
+    if (slot) categoryNameToTotal.set(cat.name, slot.totalExpected)
   })
 
   const handleClick = () => {
@@ -72,9 +68,7 @@ export function CenterDeck({ cards, hintedCardInstanceId }: CenterDeckProps) {
                   categoryTotal={
                     topCard!.data.type === 'category'
                       ? (categoryNameToTotal.get(topCard!.data.text) ?? 0)
-                      : topCard!.data.categoryId !== null
-                        ? (categoryIdToTotal.get(topCard!.data.categoryId) ?? 0)
-                        : 0
+                      : 0
                   }
                   onClick={handleClick}
                   onDragStart={!isSelected ? handleClick : undefined}

@@ -2,9 +2,10 @@
 
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { AnimatePresence } from 'framer-motion'
 import { fetchStageList, fetchProgress } from '@/lib/api'
 import type { StageListItem, ProgressRecord } from '@/types/game'
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import { SplashScreen } from '@/components/ui/SplashScreen'
 import { Button } from '@/components/ui/Button'
 
 const PLAYER_ID_KEY = 'word-solitaire-player-id'
@@ -27,7 +28,9 @@ export default function HomePage() {
 
   useEffect(() => {
     const playerId = getOrCreatePlayerId()
-    Promise.all([fetchStageList(), fetchProgress(playerId)])
+    // スプラッシュを最低1秒表示するため、データ取得と並行してタイマーを走らせる
+    const minDisplay = new Promise<void>((res) => setTimeout(res, 1000))
+    Promise.all([fetchStageList(), fetchProgress(playerId), minDisplay])
       .then(([stageList, progressList]) => {
         setStages(stageList)
         const map = new Map<number, ProgressRecord>()
@@ -44,6 +47,11 @@ export default function HomePage() {
   const allCleared = stages.length > 0 && clearedCount === stages.length
 
   return (
+    <>
+      <AnimatePresence>
+        {isLoading && <SplashScreen key="splash" />}
+      </AnimatePresence>
+
     <main className="flex flex-col items-center min-h-dvh max-w-sm mx-auto px-4 py-8 gap-6">
       {/* タイトル */}
       <div className="text-center mt-8">
@@ -67,11 +75,7 @@ export default function HomePage() {
       </div>
 
       {/* 現在のステージ */}
-      {isLoading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <LoadingSpinner message="読み込み中..." />
-        </div>
-      ) : error ? (
+      {error ? (
         <div className="w-full bg-red-900/60 rounded-2xl p-4 text-center">
           <p className="text-red-200 text-sm">{error}</p>
           <Button variant="secondary" size="sm" onClick={() => window.location.reload()} className="mt-3">
@@ -119,5 +123,6 @@ export default function HomePage() {
         <p className="text-green-300 text-sm text-center py-4">ステージがありません</p>
       )}
     </main>
+    </>
   )
 }

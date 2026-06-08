@@ -2,10 +2,11 @@
 
 import React, { useEffect } from 'react'
 import { useParams } from 'next/navigation'
+import { AnimatePresence } from 'framer-motion'
 import { fetchStageDetail } from '@/lib/api'
 import { useGameStore } from '@/store/gameStore'
 import { GameContainer } from '@/components/game/GameContainer'
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import { SplashScreen } from '@/components/ui/SplashScreen'
 import { Button } from '@/components/ui/Button'
 import { useRouter } from 'next/navigation'
 
@@ -40,9 +41,9 @@ export default function PlayPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-dvh">
-        <LoadingSpinner size="lg" message="ステージを準備中..." />
-      </div>
+      <AnimatePresence>
+        <SplashScreen key="splash" />
+      </AnimatePresence>
     )
   }
 
@@ -59,9 +60,9 @@ export default function PlayPage() {
 
   if (!gameState) {
     return (
-      <div className="flex items-center justify-center min-h-dvh">
-        <LoadingSpinner message="初期化中..." />
-      </div>
+      <AnimatePresence>
+        <SplashScreen key="splash-init" />
+      </AnimatePresence>
     )
   }
 

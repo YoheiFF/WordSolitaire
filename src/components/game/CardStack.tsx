@@ -91,11 +91,24 @@ export function CardStack({ columnIndex, cards, slot, hintedCardInstanceId }: Ca
     : -1
 
   const isDropTarget = canPlaceToSlot || canStackHere
-  // ステージ1のみカテゴリ一致のヒントを色で表示する
   const hintsEnabled = (gameState?.stageId ?? 1) === 1
 
-  const CARD_H = 88  // カード1枚の高さ(px)
-  const PEEK   = 22  // 重なったカードの見える幅(px)
+  const allCategories = useGameStore(s => s.allCategories)
+  // 通常カード用: 解放済みスロットから categoryId → totalExpected
+  const categoryIdToTotal = new Map<number, number>()
+  // カテゴリカード用: allCategories とスロットのインデックス対応でロック中でも取得可
+  const categoryNameToTotal = new Map<string, number>()
+  const slots = gameState?.categorySlots ?? []
+  allCategories.forEach((cat, i) => {
+    const slot = slots[i]
+    if (slot) {
+      categoryNameToTotal.set(cat.name, slot.totalExpected)
+      if (slot.state !== 'locked') categoryIdToTotal.set(cat.id, slot.totalExpected)
+    }
+  })
+
+  const CARD_H = 80  // カード1枚の高さ(px)
+  const PEEK   = 18  // 重なったカードの見える幅(px)
 
   const stackHeight = cards.length === 0
     ? 56
@@ -146,6 +159,13 @@ export function CardStack({ columnIndex, cards, slot, hintedCardInstanceId }: Ca
                 isSelectable={isSelectable}
                 isSelected={isInGroup}
                 isHinted={isHinted}
+                categoryTotal={
+                  card.data.type === 'category'
+                    ? (categoryNameToTotal.get(card.data.text) ?? 0)
+                    : card.data.categoryId !== null
+                      ? (categoryIdToTotal.get(card.data.categoryId) ?? 0)
+                      : 0
+                }
                 onClick={isSelectable ? () => handleCardClick(card) : undefined}
                 onDragStart={isSelectable && !isInGroup ? () => handleCardClick(card) : undefined}
               />

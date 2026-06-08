@@ -11,6 +11,7 @@ interface GameCardProps {
   isSelectable?: boolean
   isSelected?: boolean
   isHinted?: boolean
+  categoryTotal?: number   // カテゴリ解放後の総枚数バッジ（0または未指定なら非表示）
   onClick?: () => void
   onDragStart?: () => void
   compact?: boolean
@@ -34,6 +35,7 @@ export function GameCard({
   isSelectable = false,
   isSelected = false,
   isHinted = false,
+  categoryTotal = 0,
   onClick,
   onDragStart,
   compact = false,
@@ -194,6 +196,12 @@ export function GameCard({
           `}>
             {card.data.text}
           </span>
+          {/* カテゴリ総枚数バッジ */}
+          {categoryTotal > 0 && (
+            <div className="absolute top-0.5 left-0.5 bg-black/35 text-white text-[8px] font-bold px-[3px] py-px rounded leading-tight">
+              全{categoryTotal}
+            </div>
+          )}
         </div>
       ) : (
         <div

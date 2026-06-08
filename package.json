@@ -10,7 +10,7 @@
     "lint": "next lint",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:seed": "tsx src/lib/db/seed.ts",
+    "db:seed": "tsx --env-file=.env.local src/lib/db/seed.ts",
     "cap:sync": "npx cap sync",
     "cap:android": "npx cap open android"
   },

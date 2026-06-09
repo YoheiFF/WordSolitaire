@@ -107,11 +107,39 @@ export function initGame(stageData: StageData): GameState {
   const shuffled = fisherYatesShuffle(allPlayCards)
 
   // 4. 先頭8枚をメイン山札（裏向き）、残りを4列に均等配布
-  const mainDeckCards = shuffled.slice(0, 8).map((c) => ({ ...c, face: 'face_down' as const }))
+  let mainDeckCards = shuffled.slice(0, 8).map((c) => ({ ...c, face: 'face_down' as const }))
   const remaining = shuffled.slice(8)
 
   // 5. 残りを4列に均等配布
-  const rawColumns = distributeToColumns(remaining, 4)
+  let rawColumns = distributeToColumns(remaining, 4)
+
+  // 5b. カテゴリ5種類以上: 山札にカテゴリカードを必ず1枚以上確保
+  // シャッフル後に山札にカテゴリカードがない場合、列の先頭で見つかったカテゴリカードと
+  // 山札末尾の通常カードをスワップする
+  if (stageData.categories.length >= 5 && !mainDeckCards.some(c => c.data.type === 'category')) {
+    let foundCol = -1, foundIdx = -1
+    for (let ci = 0; ci < rawColumns.length && foundCol < 0; ci++) {
+      for (let ki = 0; ki < rawColumns[ci].length; ki++) {
+        if (rawColumns[ci][ki].data.type === 'category') {
+          foundCol = ci; foundIdx = ki; break
+        }
+      }
+    }
+    if (foundCol >= 0) {
+      let mainSwapIdx = -1
+      for (let mi = mainDeckCards.length - 1; mi >= 0; mi--) {
+        if (mainDeckCards[mi].data.type === 'normal') { mainSwapIdx = mi; break }
+      }
+      if (mainSwapIdx >= 0) {
+        const catCard = { ...rawColumns[foundCol][foundIdx], face: 'face_down' as const }
+        const normalCard = mainDeckCards[mainSwapIdx]
+        mainDeckCards = mainDeckCards.map((c, i) => i === mainSwapIdx ? catCard : c)
+        rawColumns = rawColumns.map((col, ci) =>
+          ci === foundCol ? col.map((c, ki) => ki === foundIdx ? normalCard : c) : col
+        )
+      }
+    }
+  }
 
   // 6. 各列の末尾（最後）のカードを表向きにする
   const columnStacks: PlayCard[][] = rawColumns.map((col) => {

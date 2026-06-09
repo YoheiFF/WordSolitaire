@@ -15,6 +15,7 @@ import { useGameStore } from '@/store/gameStore'
 import { saveProgress } from '@/lib/api'
 import { useBgm } from '@/hooks/useBgm'
 import { addCoins, calcClearCoins, getCoins } from '@/lib/coins'
+import { useSe } from '@/hooks/useSe'
 
 const PLAYER_ID_KEY = 'word-solitaire-player-id'
 
@@ -33,6 +34,8 @@ export function GameContainer() {
   const gameState = useGameStore((s) => s.gameState)
   const hint = useGameStore((s) => s.hint)
   const { resetGame, clearHint } = useGameStore()
+  const { play: playClear } = useSe('/audio/clear.mp3')
+  const { play: playFailed } = useSe('/audio/failed.mp3')
   const [coins, setCoins] = React.useState(0)
 
   // マウント時にコインを読み込み、クリア後に再読み込み
@@ -57,12 +60,19 @@ export function GameContainer() {
     }).catch(console.error)
   }, [gameState?.status])
 
-  // クリア時にコインを付与（status が cleared に変化したとき1回だけ）
+  // クリア時にコインを付与・SE再生（status が cleared に変化したとき1回だけ）
   useEffect(() => {
     if (gameState?.status !== 'cleared') return
+    playClear()
     const { total } = calcClearCoins(gameState.stageId, gameState.movesLeft)
     addCoins(total)
     setCoins(getCoins())
+  }, [gameState?.status])
+
+  // 失敗時にSE再生
+  useEffect(() => {
+    if (gameState?.status !== 'failed') return
+    playFailed()
   }, [gameState?.status])
 
   if (!gameState) return null

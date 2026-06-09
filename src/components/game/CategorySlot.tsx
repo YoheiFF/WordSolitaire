@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import type { CategorySlot as CategorySlotType, PlayCard } from '@/types/game'
 import { useGameStore } from '@/store/gameStore'
 import { useDragStore } from '@/store/dragStore'
+import { useSe } from '@/hooks/useSe'
 
 interface CategorySlotProps {
   slot: CategorySlotType
@@ -14,6 +15,8 @@ interface CategorySlotProps {
 
 export function CategorySlot({ slot, slotIndex, hintedSlotIndex }: CategorySlotProps) {
   const { gameState, placeToCategorySlot, placeToColumnStack, resetFilledSlot } = useGameStore()
+  const { play: playSe } = useSe('/audio/place.mp3')
+  const { play: playCancel } = useSe('/audio/cancel.mp3')
   const selectedCard = gameState?.selectedCard ?? null
   const selectedSource = gameState?.selectedCardSource ?? null
 
@@ -54,14 +57,15 @@ export function CategorySlot({ slot, slotIndex, hintedSlotIndex }: CategorySlotP
   const [shakeKey, setShakeKey] = useState(0)
   const triggerShake = () => {
     setShakeKey((k) => k + 1)
+    playCancel()
     navigator.vibrate?.(80)
   }
 
   const handlePlace = () => {
     if (canPlaceCategoryCard) {
-      placeToCategorySlot(slotIndex)
+      playSe(); placeToCategorySlot(slotIndex)
     } else if (canPlaceNormalCard) {
-      placeToColumnStack(slotIndex)
+      playSe(); placeToColumnStack(slotIndex)
     } else if (selectedCard !== null) {
       triggerShake()
     }

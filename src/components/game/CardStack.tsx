@@ -6,6 +6,7 @@ import { GameCard } from './GameCard'
 import type { PlayCard, CategorySlot } from '@/types/game'
 import { useGameStore } from '@/store/gameStore'
 import { useDragStore } from '@/store/dragStore'
+import { useSe } from '@/hooks/useSe'
 
 interface CardStackProps {
   columnIndex: number
@@ -16,10 +17,13 @@ interface CardStackProps {
 
 export function CardStack({ columnIndex, cards, slot, hintedCardInstanceId }: CardStackProps) {
   const { gameState, selectCard, placeToColumnStack, stackCardOnColumn } = useGameStore()
+  const { play: playSe } = useSe('/audio/place.mp3')
+  const { play: playCancel } = useSe('/audio/cancel.mp3')
   const [shakeKey, setShakeKey] = useState(0)
 
   const triggerShake = () => {
     setShakeKey((k) => k + 1)
+    playCancel()
     navigator.vibrate?.(80)
   }
   const selectedCard = gameState?.selectedCard ?? null
@@ -88,8 +92,8 @@ export function CardStack({ columnIndex, cards, slot, hintedCardInstanceId }: Ca
 
   const handleStackAreaClick = () => {
     if (!selectedCard) return
-    if (canStackHere) stackCardOnColumn(columnIndex)
-    else if (canPlaceToSlot) placeToColumnStack(columnIndex)
+    if (canStackHere) { playSe(); stackCardOnColumn(columnIndex) }
+    else if (canPlaceToSlot) { playSe(); placeToColumnStack(columnIndex) }
     else triggerShake()
   }
 

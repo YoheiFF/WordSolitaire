@@ -11,7 +11,7 @@ interface GameMenuProps {
 
 export function GameMenu({ onRestart, onGoHome }: GameMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const { bgmVolume, setBgmVolume } = useSettingsStore()
+  const { bgmVolume, setBgmVolume, seVolume, setSeVolume } = useSettingsStore()
 
   const close = () => setIsOpen(false)
 
@@ -118,15 +118,25 @@ export function GameMenu({ onRestart, onGoHome }: GameMenuProps) {
                   />
                 </div>
 
-                {/* SE音量（未実装） */}
+                {/* SE音量 */}
                 <div className="px-4 py-3.5 rounded-2xl bg-white/10">
                   <div className="flex items-center gap-3 mb-3">
-                    <span className="text-2xl">🎵</span>
+                    <span className="text-2xl">
+                      {seVolume === 0 ? '🔇' : seVolume < 40 ? '🔈' : seVolume < 80 ? '🔉' : '🔊'}
+                    </span>
                     <div className="flex-1">
                       <p className="text-white font-semibold text-sm">SE音量</p>
                     </div>
+                    <span className="text-white/60 text-sm tabular-nums">{seVolume}%</span>
                   </div>
-                  <p className="text-white/30 text-xs">※ SEは現在未実装です</p>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={seVolume}
+                    onChange={(e) => setSeVolume(Number(e.target.value))}
+                    className="w-full h-1.5 rounded-full accent-yellow-400 cursor-pointer"
+                  />
                 </div>
 
               </div>

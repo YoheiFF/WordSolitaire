@@ -14,7 +14,7 @@ import { DragOverlay } from '@/components/ui/DragOverlay'
 import { useGameStore, selectHistory } from '@/store/gameStore'
 import { saveProgress } from '@/lib/api'
 import { useBgm } from '@/hooks/useBgm'
-import { addCoins, calcClearCoins } from '@/lib/coins'
+import { addCoins, calcClearCoins, getCoins } from '@/lib/coins'
 
 const PLAYER_ID_KEY = 'word-solitaire-player-id'
 
@@ -34,6 +34,10 @@ export function GameContainer() {
   const hint = useGameStore((s) => s.hint)
   const history = useGameStore(selectHistory)
   const { resetGame, clearHint } = useGameStore()
+  const [coins, setCoins] = React.useState(0)
+
+  // マウント時にコインを読み込み、クリア後に再読み込み
+  useEffect(() => { setCoins(getCoins()) }, [])
 
   const isCleared = gameState?.status === 'cleared'
   const isFailed = gameState?.status === 'failed'
@@ -59,6 +63,7 @@ export function GameContainer() {
     if (gameState?.status !== 'cleared') return
     const { total } = calcClearCoins(gameState.stageId, gameState.movesLeft)
     addCoins(total)
+    setCoins(getCoins())
   }, [gameState?.status])
 
   if (!gameState) return null
@@ -83,6 +88,7 @@ export function GameContainer() {
         movesLeft={gameState.movesLeft}
         maxMoves={gameState.maxMoves}
         mainDeckCount={gameState.mainDeck.length}
+        coins={coins}
         onRestart={handleRetry}
         onGoHome={handleGoHome}
       />

@@ -119,12 +119,12 @@ export function CardStack({ columnIndex, cards, slot, hintedCardInstanceId }: Ca
   const isDropTarget = canPlaceToSlot || canStackHere
   const hintsEnabled = (gameState?.stageId ?? 1) === 1
 
-  // カテゴリカード用: allCategories とスロットのインデックス対応でロック中でも取得可
+  // カテゴリカードのバッジ用: カテゴリ名 → 通常カード枚数
+  const categoryTotals = useGameStore(s => s.categoryTotals)
   const categoryNameToTotal = new Map<string, number>()
-  const slots = gameState?.categorySlots ?? []
-  allCategories.forEach((cat, i) => {
-    const slot = slots[i]
-    if (slot) categoryNameToTotal.set(cat.name, slot.totalExpected)
+  allCategories.forEach((cat) => {
+    const total = categoryTotals[cat.id]
+    if (total) categoryNameToTotal.set(cat.name, total)
   })
 
   const CARD_H = 80  // カード1枚の高さ(px)

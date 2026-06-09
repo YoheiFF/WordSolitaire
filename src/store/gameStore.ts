@@ -32,6 +32,8 @@ interface GameStore {
   hint: HintResult | null
   // 全カテゴリリスト（placeToCategorySlot で使用）
   allCategories: CategoryData[]
+  // カテゴリID → 通常カード枚数（バッジ表示用）
+  categoryTotals: Record<number, number>
 
   // --- アクション ---
   initGame: (stageData: StageData) => void
@@ -62,15 +64,24 @@ export const useGameStore = create<GameStoreInternal>()(
     error: null,
     hint: null,
     allCategories: [],
+    categoryTotals: {},
     history: [],
     stageData: null,
 
     initGame: (stageData: StageData) => {
       const newState = initGame(stageData)
+      // カテゴリID → 通常カード枚数マップを一度計算
+      const totals: Record<number, number> = {}
+      stageData.cards
+        .filter((c) => c.type === 'normal' && c.categoryId !== null)
+        .forEach((c) => {
+          totals[c.categoryId!] = (totals[c.categoryId!] ?? 0) + 1
+        })
       set((draft) => {
         draft.gameState = newState as unknown as typeof draft.gameState
         draft.history = []
         draft.allCategories = stageData.categories as unknown as typeof draft.allCategories
+        draft.categoryTotals = totals
         draft.stageData = stageData as unknown as typeof draft.stageData
         draft.error = null
         draft.hint = null

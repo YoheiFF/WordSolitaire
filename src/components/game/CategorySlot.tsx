@@ -17,15 +17,17 @@ export function CategorySlot({ slot, slotIndex, hintedSlotIndex }: CategorySlotP
   const { gameState, placeToCategorySlot, placeToColumnStack, resetFilledSlot } = useGameStore()
   const { play: playSe } = useSe('/audio/place.mp3')
   const { play: playCancel } = useSe('/audio/cancel.mp3')
+  const { play: playComplete } = useSe('/audio/complete.mp3')
   const selectedCard = gameState?.selectedCard ?? null
   const selectedSource = gameState?.selectedCardSource ?? null
 
   const isHinted = hintedSlotIndex === slotIndex
 
-  // filled 状態を検知して 600ms 後にリセット
+  // filled 状態を検知して完成音を鳴らし、600ms 後にリセット
   const prevStateRef = useRef(slot.state)
   useEffect(() => {
     if (slot.state === 'filled') {
+      playComplete()
       const t = setTimeout(() => resetFilledSlot(slotIndex), 600)
       return () => clearTimeout(t)
     }

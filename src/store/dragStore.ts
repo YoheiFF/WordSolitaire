@@ -7,7 +7,8 @@ interface DragState {
   y: number
   w: number
   h: number
-  setDrag: (cards: PlayCard[], x: number, y: number, w: number, h: number) => void
+  grabIndex: number  // グループ内でつかんだカードのインデックス（オーバーレイ位置調整用）
+  setDrag: (cards: PlayCard[], x: number, y: number, w: number, h: number, grabIndex?: number) => void
   updatePos: (x: number, y: number) => void
   clearDrag: () => void
 }
@@ -18,7 +19,8 @@ export const useDragStore = create<DragState>()((set) => ({
   y: 0,
   w: 60,
   h: 88,
-  setDrag: (cards, x, y, w, h) => set({ cards, x, y, w, h }),
+  grabIndex: 0,
+  setDrag: (cards, x, y, w, h, grabIndex = 0) => set({ cards, x, y, w, h, grabIndex }),
   updatePos: (x, y) => set({ x, y }),
-  clearDrag: () => set({ cards: [] }),
+  clearDrag: () => set({ cards: [], grabIndex: 0 }),
 }))

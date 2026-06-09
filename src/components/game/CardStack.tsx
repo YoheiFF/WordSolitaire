@@ -10,7 +10,7 @@ import { useDragStore } from '@/store/dragStore'
 interface CardStackProps {
   columnIndex: number
   cards: PlayCard[]
-  slot: CategorySlot
+  slot: CategorySlot | null
   hintedCardInstanceId?: string | null
 }
 
@@ -34,14 +34,16 @@ export function CardStack({ columnIndex, cards, slot, hintedCardInstanceId }: Ca
     return idx >= 0 ? sourceCol.slice(idx) : [selectedCard]
   })()
 
-  const handleCardClick = (card: PlayCard) => {
-    selectCard(card, { type: 'columnStack', col: columnIndex })
+  const handleCardClick = (_card: PlayCard) => {
+    const firstFaceUp = cards.find(c => c.face === 'face_up') ?? _card
+    selectCard(firstFaceUp, { type: 'columnStack', col: columnIndex })
   }
 
   const bottomCard = cards.length > 0 ? cards[cards.length - 1] : null
 
   // カテゴリスロットへの配置可否（グループ全体で判定）
   const canPlaceToSlot =
+    slot !== null &&
     selectedGroup.length > 0 &&
     selectedGroup.every((c) => c.data.type === 'normal') &&
     slot.state === 'empty' &&

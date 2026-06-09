@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import type { CategorySlot as CategorySlotType, PlayCard } from '@/types/game'
 import { useGameStore } from '@/store/gameStore'
@@ -13,11 +13,21 @@ interface CategorySlotProps {
 }
 
 export function CategorySlot({ slot, slotIndex, hintedSlotIndex }: CategorySlotProps) {
-  const { gameState, placeToCategorySlot, placeToColumnStack } = useGameStore()
+  const { gameState, placeToCategorySlot, placeToColumnStack, resetFilledSlot } = useGameStore()
   const selectedCard = gameState?.selectedCard ?? null
   const selectedSource = gameState?.selectedCardSource ?? null
 
   const isHinted = hintedSlotIndex === slotIndex
+
+  // filled 状態を検知して 600ms 後にリセット
+  const prevStateRef = useRef(slot.state)
+  useEffect(() => {
+    if (slot.state === 'filled') {
+      const t = setTimeout(() => resetFilledSlot(slotIndex), 600)
+      return () => clearTimeout(t)
+    }
+    prevStateRef.current = slot.state
+  }, [slot.state, slotIndex, resetFilledSlot])
 
   // グループを取得（列スタックから選択時は selectedCard 以降を全て）
   const selectedGroup: PlayCard[] = (() => {
@@ -141,9 +151,16 @@ export function CategorySlot({ slot, slotIndex, hintedSlotIndex }: CategorySlotP
         )}
       </div>
 
-      {/* クリア済みの金色オーバーレイ */}
+      {/* 完成アニメーションオーバーレイ */}
       {isFilled && (
-        <div className="absolute inset-0 bg-yellow-400/15 rounded-xl" />
+        <motion.div
+          className="absolute inset-0 rounded-xl flex items-center justify-center"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          style={{ background: 'rgba(234,179,8,0.35)' }}
+        >
+          <span className="text-yellow-900 font-extrabold text-lg drop-shadow">完成！</span>
+        </motion.div>
       )}
     </motion.div>
   )

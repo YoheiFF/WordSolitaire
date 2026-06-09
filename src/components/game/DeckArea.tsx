@@ -13,8 +13,9 @@ interface DeckAreaProps {
 }
 
 export function DeckArea({ mainDeck, centerDeck, hintedCardInstanceId }: DeckAreaProps) {
-  const { drawFromMainDeck, gameState } = useGameStore()
+  const { drawFromMainDeck, refreshDeck, gameState } = useGameStore()
   const isPlaying = gameState?.status === 'playing'
+  const canRefresh = mainDeck.length === 0 && centerDeck.length > 0
 
   return (
     <div className="flex items-center justify-between w-full px-2">
@@ -25,6 +26,8 @@ export function DeckArea({ mainDeck, centerDeck, hintedCardInstanceId }: DeckAre
       <MainDeck
         cards={mainDeck}
         onClick={drawFromMainDeck}
+        onRefresh={refreshDeck}
+        canRefresh={canRefresh}
         disabled={!isPlaying}
       />
     </div>

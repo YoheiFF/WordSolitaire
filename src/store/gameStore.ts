@@ -11,6 +11,7 @@ import type {
 import {
   initGame,
   drawFromMainDeck,
+  refreshDeck,
   selectCard,
   placeToCategorySlotWithCategories,
   placeToColumn,
@@ -18,6 +19,7 @@ import {
   undoLastAction,
   getHint,
   checkGameEnd,
+  resetFilledSlot,
 } from '@/lib/gameLogic'
 
 const MAX_HISTORY = 10
@@ -34,6 +36,7 @@ interface GameStore {
   // --- アクション ---
   initGame: (stageData: StageData) => void
   drawFromMainDeck: () => void
+  refreshDeck: () => void
   selectCard: (card: PlayCard, source: CardSource) => void
   placeToCategorySlot: (slotIndex: number) => void
   placeToColumnStack: (columnIndex: number) => void
@@ -42,6 +45,7 @@ interface GameStore {
   useHint: () => void
   clearHint: () => void
   resetGame: () => void
+  resetFilledSlot: (slotIndex: number) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
 }
@@ -90,6 +94,22 @@ export const useGameStore = create<GameStoreInternal>()(
       })
     },
 
+    refreshDeck: () => {
+      const { gameState } = get()
+      if (!gameState || gameState.status !== 'playing') return
+
+      set((draft) => {
+        const history = [...draft.history]
+        if (history.length >= MAX_HISTORY) history.shift()
+        history.push(JSON.parse(JSON.stringify(draft.gameState)))
+        draft.history = history as unknown as typeof draft.history
+
+        const newState = refreshDeck(gameState)
+        draft.gameState = newState as unknown as typeof draft.gameState
+        draft.hint = null
+      })
+    },
+
     selectCard: (card: PlayCard, source: CardSource) => {
       const { gameState } = get()
       if (!gameState || gameState.status !== 'playing') return
@@ -101,7 +121,7 @@ export const useGameStore = create<GameStoreInternal>()(
     },
 
     placeToCategorySlot: (slotIndex: number) => {
-      const { gameState, allCategories } = get()
+      const { gameState, allCategories, stageData } = get()
       if (!gameState || gameState.status !== 'playing') return
       if (!gameState.selectedCard) return
 
@@ -112,10 +132,12 @@ export const useGameStore = create<GameStoreInternal>()(
         history.push(JSON.parse(JSON.stringify(draft.gameState)))
         draft.history = history as unknown as typeof draft.history
 
+        const allCards = stageData?.cards ?? []
         const newState = placeToCategorySlotWithCategories(
           gameState,
           slotIndex,
-          allCategories
+          allCategories,
+          allCards
         )
         draft.gameState = newState as unknown as typeof draft.gameState
         draft.hint = null
@@ -201,6 +223,18 @@ export const useGameStore = create<GameStoreInternal>()(
         draft.history = []
         draft.hint = null
         draft.error = null
+      })
+    },
+
+    resetFilledSlot: (slotIndex: number) => {
+      const { gameState } = get()
+      if (!gameState || gameState.status !== 'playing') return
+      const slot = gameState.categorySlots[slotIndex]
+      if (!slot || slot.state !== 'filled') return
+
+      set((draft) => {
+        const newState = resetFilledSlot(gameState, slotIndex)
+        draft.gameState = newState as unknown as typeof draft.gameState
       })
     },
 

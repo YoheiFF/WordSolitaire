@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { db } from '@/lib/db/client'
 import { stages, stageCards, cards, categories } from '@/lib/db/schema'
-import { eq, inArray } from 'drizzle-orm'
+import { eq, inArray, asc } from 'drizzle-orm'
 import type { StageData, CardData, CategoryData } from '@/types/game'
 
 export async function GET(request: Request) {
@@ -82,6 +82,7 @@ export async function GET(request: Request) {
         .select()
         .from(categories)
         .where(inArray(categories.id, categoryIds))
+        .orderBy(asc(categories.id))
     }
 
     const cardData: CardData[] = cardRows.map((c) => ({

@@ -35,10 +35,9 @@ function DragCardVisual({ card }: { card: PlayCard }) {
 }
 
 export function DragOverlay() {
-  const { cards, x, y, w, h } = useDragStore()
+  const { cards, x, y, w, h, grabIndex } = useDragStore()
   if (cards.length === 0) return null
 
-  // グループ全体の高さ: 先頭カードが pointer の中心に来るよう配置
   const stackHeight = (cards.length - 1) * PEEK + h
 
   return (
@@ -46,7 +45,7 @@ export function DragOverlay() {
       className="fixed pointer-events-none z-50"
       style={{
         left: x - w / 2,
-        top: y - h / 2,
+        top: y - h / 2 - grabIndex * PEEK,
         width: w,
         height: stackHeight,
         opacity: 0.9,

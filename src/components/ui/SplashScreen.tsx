@@ -12,8 +12,8 @@ export function SplashScreen() {
       transition={{ duration: 0.6, ease: 'easeOut' }}
     >
       <Image
-        src="/images/title.png"
-        alt="ワードソリティア"
+        src="/images/loading.png"
+        alt="Loading"
         fill
         className="object-cover"
         priority

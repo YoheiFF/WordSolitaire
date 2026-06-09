@@ -74,8 +74,9 @@ export function GameCard({
       // カードを選択してからグループを取得
       stableRef.current.onDragStart?.()
       const group = getDragGroup(stableRef.current.card)
+      const grabIndex = Math.max(0, group.findIndex(c => c.instanceId === stableRef.current.card.instanceId))
       const rect = el.getBoundingClientRect()
-      stableRef.current.setDrag(group, e.clientX, e.clientY, rect.width, rect.height)
+      stableRef.current.setDrag(group, e.clientX, e.clientY, rect.width, rect.height, grabIndex)
     }
 
     const handleDrag = (e: DragEvent) => {
@@ -113,8 +114,9 @@ export function GameCard({
       if (!isSelected) onClick?.()
       // カード選択後にグループを取得してオーバーレイ開始
       const group = getDragGroup(card)
+      const grabIndex = Math.max(0, group.findIndex(c => c.instanceId === card.instanceId))
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-      setDrag(group, t.clientX, t.clientY, rect.width, rect.height)
+      setDrag(group, t.clientX, t.clientY, rect.width, rect.height, grabIndex)
     }
     if (touchRef.current.moved) {
       updatePos(t.clientX, t.clientY)

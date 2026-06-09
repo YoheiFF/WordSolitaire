@@ -123,21 +123,15 @@ export function initGame(stageData: StageData): GameState {
     )
   })
 
-  // 7. 全スロットをカテゴリ未設定（locked）で初期化
-  // カテゴリカードが置かれると該当スロットが empty（通常カード受付可能）になる
-  const categorySlots: CategorySlot[] = [0, 1, 2, 3].map((i) => {
-    const cat = stageData.categories[i] ?? null
-    const expected = cat
-      ? normalCards.filter((c) => c.categoryId === cat.id).length
-      : 0
-    return {
-      columnIndex: i,
-      state: 'locked' as const,
-      category: null,
-      placedCards: [],
-      totalExpected: expected,
-    }
-  })
+  // 7. カテゴリスロットを4固定で初期化（locked）
+  // カテゴリカードが置かれると該当スロットが empty になり、完成後は locked にリセットされ再利用される
+  const categorySlots: CategorySlot[] = [0, 1, 2, 3].map((i) => ({
+    columnIndex: i,
+    state: 'locked' as const,
+    category: null,
+    placedCards: [],
+    totalExpected: 0,
+  }))
 
   // 8. ゲーム開始時に一番左（slot 0）のカテゴリカードを自動配置してスロット0を開放する
   // 対象: stageData.categories[0] に対応するカテゴリカード
@@ -173,8 +167,17 @@ export function initGame(stageData: StageData): GameState {
   const finalCategorySlots = categorySlots.map((s) => ({ ...s }))
 
   if (autoCard && slot0Cat) {
-    // 常に slot 0 に配置
-    finalCategorySlots[0] = { ...finalCategorySlots[0], state: 'empty', category: slot0Cat }
+    // slot0Cat に対応する normalcard 枚数を計算
+    const slot0TotalExpected = normalCards.filter(
+      (c) => c.categoryId === slot0Cat.id
+    ).length
+    // 常に slot 0 に配置し、totalExpected を正しい値で上書き
+    finalCategorySlots[0] = {
+      ...finalCategorySlots[0],
+      state: 'empty',
+      category: slot0Cat,
+      totalExpected: slot0TotalExpected,
+    }
     if (autoFromCol >= 0) {
       const newCol = finalColumnStacks[autoFromCol].filter((c) => c.instanceId !== autoCard!.instanceId)
       if (newCol.length > 0) newCol[newCol.length - 1] = { ...newCol[newCol.length - 1], face: 'face_up' }
@@ -198,7 +201,33 @@ export function initGame(stageData: StageData): GameState {
     hintUsed: 0,
     maxHints: 3,
     totalNormalCards: normalCards.length,
+    clearedNormalCardCount: 0,
   }
+}
+
+/**
+ * 山札リフレッシュ
+ * メイン山札が空のとき、中央山札（捨て山）を裏向きに戻してメイン山札を再生成する。手数-1。
+ */
+export function refreshDeck(state: GameState): GameState {
+  if (state.mainDeck.length > 0) return state
+  if (state.centerDeck.length === 0) return state
+  if (state.movesLeft <= 0) return state
+
+  const newMainDeck = [...state.centerDeck]
+    .reverse()
+    .map((c) => ({ ...c, face: 'face_down' as const }))
+
+  const newState: GameState = {
+    ...state,
+    mainDeck: newMainDeck,
+    centerDeck: [],
+    movesLeft: state.movesLeft - 1,
+    selectedCard: null,
+    selectedCardSource: null,
+  }
+
+  return checkGameEnd(newState)
 }
 
 /**
@@ -246,7 +275,8 @@ export function selectCard(
 export function placeToCategorySlotWithCategories(
   state: GameState,
   slotIndex: number,
-  allCategories: import('@/types/game').CategoryData[]
+  allCategories: import('@/types/game').CategoryData[],
+  allCards: import('@/types/game').CardData[]
 ): GameState {
   const card = state.selectedCard
   const source = state.selectedCardSource
@@ -263,10 +293,20 @@ export function placeToCategorySlotWithCategories(
   )
   if (!correspondingCategory) return state
 
-  // スロットをemptyに解放
+  // allCards から対象カテゴリの normalcard 枚数を正確に計算
+  const correctTotalExpected = allCards.filter(
+    (c) => c.type === 'normal' && c.categoryId === correspondingCategory.id
+  ).length
+
+  // スロットをemptyに解放し、totalExpected を正しい値で上書き
   const updatedSlots = state.categorySlots.map((s, i) =>
     i === slotIndex
-      ? { ...s, state: 'empty' as const, category: correspondingCategory }
+      ? {
+          ...s,
+          state: 'empty' as const,
+          category: correspondingCategory,
+          totalExpected: correctTotalExpected,
+        }
       : s
   )
 
@@ -315,12 +355,13 @@ export function placeToColumn(
   // スロットの空き確認
   if (slot.placedCards.length + group.length > slot.totalExpected) return state
 
-  // グループをスロットに配置
-  const updatedSlots = state.categorySlots.map((s, i) =>
-    i === columnIndex
-      ? { ...s, placedCards: [...s.placedCards, ...group.map((c) => ({ ...c, face: 'face_up' as const }))] }
-      : s
-  )
+  // グループをスロットに配置（全枚数揃ったら 'filled' に遷移）
+  const updatedSlots = state.categorySlots.map((s, i) => {
+    if (i !== columnIndex) return s
+    const newPlacedCards = [...s.placedCards, ...group.map((c) => ({ ...c, face: 'face_up' as const }))]
+    const newSlotState = newPlacedCards.length >= s.totalExpected ? 'filled' as const : s.state
+    return { ...s, placedCards: newPlacedCards, state: newSlotState }
+  })
 
   // ソースからグループを除去
   let newState: GameState
@@ -415,11 +456,35 @@ export function stackCardOnColumn(
 }
 
 /**
+ * 完成スロットのリセット
+ * UI 側が filled 状態を検知し、アニメーション後にこの関数を呼び出す。
+ * スロットを locked にリセットし、clearedNormalCardCount に枚数を加算する。
+ */
+export function resetFilledSlot(state: GameState, slotIndex: number): GameState {
+  const slot = state.categorySlots[slotIndex]
+  if (!slot || slot.state !== 'filled') return state
+
+  const clearedCount = slot.placedCards.length
+  const updatedSlots = state.categorySlots.map((s, i) =>
+    i === slotIndex
+      ? { columnIndex: s.columnIndex, state: 'locked' as const, category: null, placedCards: [], totalExpected: 0 }
+      : s
+  )
+
+  return {
+    ...state,
+    categorySlots: updatedSlots,
+    clearedNormalCardCount: state.clearedNormalCardCount + clearedCount,
+  }
+}
+
+/**
  * クリア・失敗判定
  * 各アクションの末尾で呼び出す。
  */
 export function checkGameEnd(state: GameState): GameState {
-  const totalPlaced = state.categorySlots.reduce(
+  // 完成済み枚数 + 現在アクティブなスロットに置かれた枚数（filled 含む）
+  const totalPlaced = state.clearedNormalCardCount + state.categorySlots.reduce(
     (sum, s) => sum + s.placedCards.length,
     0
   )
@@ -451,8 +516,9 @@ export function checkGameEnd(state: GameState): GameState {
     return { ...state, status: 'failed' }
   }
 
-  // デッドロック検知: 山札空 & 裏向きカードなし & 全表向きカードに有効手なし
-  if (state.mainDeck.length === 0 && totalPlaced < state.totalNormalCards) {
+  // デッドロック検知: 山札空 & 捨て山空 & 裏向きカードなし & 全表向きカードに有効手なし
+  // centerDeck にカードが残っていればリフレッシュできるため、デッドロックにならない
+  if (state.mainDeck.length === 0 && state.centerDeck.length === 0 && totalPlaced < state.totalNormalCards) {
     const hasFaceDownInStacks = state.columnStacks.some((col) =>
       col.some((c) => c.face === 'face_down')
     )
@@ -472,12 +538,20 @@ export function checkGameEnd(state: GameState): GameState {
           if (card.data.type === 'category') {
             return state.categorySlots.some((s) => s.state === 'locked')
           }
-          return state.categorySlots.some(
+          // カテゴリスロットへの配置チェック
+          if (state.categorySlots.some(
             (s) =>
               s.state === 'empty' &&
               s.category?.id === card.data.categoryId &&
               s.placedCards.length < s.totalExpected
-          )
+          )) return true
+          // 列スタック間の移動チェック（空列 or 同カテゴリ列の上に積む）
+          return state.columnStacks.some((col) => {
+            if (col.length === 0) return true
+            const top = col[col.length - 1]
+            if (top.instanceId === card.instanceId) return false
+            return top.data.categoryId === card.data.categoryId
+          })
         })
         if (!hasValidMove) return { ...state, status: 'failed' }
       }

@@ -22,7 +22,7 @@ export function CardStackArea({
           key={colIndex}
           columnIndex={colIndex}
           cards={cards}
-          slot={categorySlots[colIndex]}
+          slot={categorySlots[colIndex] ?? null}
           hintedCardInstanceId={hintedCardInstanceId}
         />
       ))}

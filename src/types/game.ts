@@ -76,13 +76,14 @@ export interface GameState {
   mainDeck: PlayCard[]          // 右上の山札（裏向き）
   centerDeck: PlayCard[]        // 中央山札（表向きスタック、最後が最上位）
   columnStacks: PlayCard[][]    // 4列のカードスタック [col0, col1, col2, col3]
-  categorySlots: CategorySlot[] // 4列のカテゴリスロット
+  categorySlots: CategorySlot[] // 4固定のカテゴリスロット
   selectedCard: PlayCard | null // 選択中のカード
   selectedCardSource: CardSource | null
   status: GameStatus
   hintUsed: number              // ヒント使用回数
   maxHints: number              // ヒント最大使用回数（例: 3）
   totalNormalCards: number      // ステージの全通常カード枚数（クリア判定用）
+  clearedNormalCardCount: number // 完成済みカテゴリのカード累計数
 }
 
 // =====================

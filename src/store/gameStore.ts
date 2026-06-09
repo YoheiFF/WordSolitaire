@@ -162,7 +162,7 @@ export const useGameStore = create<GameStoreInternal>()(
     },
 
     stackCardOnColumn: (colIndex: number) => {
-      const { gameState } = get()
+      const { gameState, allCategories } = get()
       if (!gameState || gameState.status !== 'playing') return
       if (!gameState.selectedCard) return
 
@@ -172,7 +172,7 @@ export const useGameStore = create<GameStoreInternal>()(
         history.push(JSON.parse(JSON.stringify(draft.gameState)))
         draft.history = history as unknown as typeof draft.history
 
-        const newState = stackCardOnColumn(gameState, colIndex)
+        const newState = stackCardOnColumn(gameState, colIndex, allCategories)
         draft.gameState = newState as unknown as typeof draft.gameState
         draft.hint = null
       })

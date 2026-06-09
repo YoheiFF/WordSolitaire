@@ -419,29 +419,39 @@ export function placeToColumn(
 
 /**
  * 列スタックへの積み重ね
- * ・同じカテゴリの最上位カードを持つ列スタックに積む
- * ・空列にはどんな通常カードでも移動可能
+ * ・通常カード: 空列 or 同カテゴリの通常カードが最上位の列に積む
+ * ・カテゴリカード: 同カテゴリの通常カードが最上位の非空列に積む（カードは必ず1枚）
+ * ・カテゴリカードの上には何も積めない
  * ・列スタック選択時は選択カード以降のグループをまとめて移動する
  * 手数-1。
  */
 export function stackCardOnColumn(
   state: GameState,
-  colIndex: number
+  colIndex: number,
+  allCategories: import('@/types/game').CategoryData[] = []
 ): GameState {
   const card = state.selectedCard
   const source = state.selectedCardSource
 
   if (!card || !source) return state
-  if (card.data.type !== 'normal') return state
   if (source.type === 'columnStack' && source.col === colIndex) return state
   if (state.movesLeft <= 0) return state
 
   const targetCol = state.columnStacks[colIndex]
+  const topCard = targetCol.length > 0 ? targetCol[targetCol.length - 1] : null
 
-  // 非空列: 最上位カードとカテゴリが一致する必要がある
-  if (targetCol.length > 0) {
-    const topCard = targetCol[targetCol.length - 1]
-    if (topCard.data.categoryId !== card.data.categoryId) return state
+  if (card.data.type === 'category') {
+    // カテゴリカード: 非空列かつ最上位が同カテゴリの通常カードの場合のみ配置可
+    if (targetCol.length === 0) return state
+    if (topCard?.data.type !== 'normal') return state
+    const catCategory = allCategories.find((cat) => cat.name === card.data.text)
+    if (!catCategory || topCard.data.categoryId !== catCategory.id) return state
+  } else {
+    // 通常カード: カテゴリカードの上には積めない
+    if (targetCol.length > 0) {
+      if (topCard?.data.type !== 'normal') return state
+      if (topCard.data.categoryId !== card.data.categoryId) return state
+    }
   }
 
   // グループ取得: 列スタック選択時は selectedCard 以降を全部まとめる
@@ -480,7 +490,7 @@ export function stackCardOnColumn(
     selectedCardSource: null,
   }
 
-  return checkGameEnd(newState)
+  return checkGameEnd(newState, allCategories)
 }
 
 /**
@@ -510,7 +520,10 @@ export function resetFilledSlot(state: GameState, slotIndex: number): GameState 
  * クリア・失敗判定
  * 各アクションの末尾で呼び出す。
  */
-export function checkGameEnd(state: GameState): GameState {
+export function checkGameEnd(
+  state: GameState,
+  allCategories: import('@/types/game').CategoryData[] = []
+): GameState {
   // 完成済み枚数 + 現在アクティブなスロットに置かれた枚数（filled 含む）
   const totalPlaced = state.clearedNormalCardCount + state.categorySlots.reduce(
     (sum, s) => sum + s.placedCards.length,
@@ -564,7 +577,20 @@ export function checkGameEnd(state: GameState): GameState {
       if (faceUpCards.length > 0) {
         const hasValidMove = faceUpCards.some((card) => {
           if (card.data.type === 'category') {
-            return state.categorySlots.some((s) => s.state === 'locked')
+            // lockedスロットへ配置できるか
+            if (state.categorySlots.some((s) => s.state === 'locked')) return true
+            // 同カテゴリ通常カードが最上位の列に配置できるか
+            if (allCategories.length > 0) {
+              const catCategory = allCategories.find((cat) => cat.name === card.data.text)
+              if (catCategory) {
+                return state.columnStacks.some((col) => {
+                  if (col.length === 0) return false
+                  const top = col[col.length - 1]
+                  return top.data.type === 'normal' && top.data.categoryId === catCategory.id
+                })
+              }
+            }
+            return false
           }
           // カテゴリスロットへの配置チェック
           if (state.categorySlots.some(

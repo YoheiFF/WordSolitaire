@@ -35,11 +35,19 @@ export function CardStack({ columnIndex, cards, slot, hintedCardInstanceId }: Ca
   })()
 
   const handleCardClick = (_card: PlayCard) => {
+    // カテゴリカードは直接選択（グループ選択しない）
+    if (_card.data.type === 'category') {
+      selectCard(_card, { type: 'columnStack', col: columnIndex })
+      return
+    }
+    // 通常カード: 列の最初の表向きカードを選択（グループ移動のため）
     const firstFaceUp = cards.find(c => c.face === 'face_up') ?? _card
     selectCard(firstFaceUp, { type: 'columnStack', col: columnIndex })
   }
 
   const bottomCard = cards.length > 0 ? cards[cards.length - 1] : null
+
+  const allCategories = useGameStore(s => s.allCategories)
 
   // カテゴリスロットへの配置可否（グループ全体で判定）
   const canPlaceToSlot =
@@ -51,16 +59,32 @@ export function CardStack({ columnIndex, cards, slot, hintedCardInstanceId }: Ca
     slot.placedCards.length + selectedGroup.length <= slot.totalExpected
 
   // 列スタックへの積み重ね可否
-  // ・空列: 通常カードであれば何でも可
-  // ・非空列: 最上位カードとカテゴリ一致
-  // ・同一列への移動は不可
-  const canStackHere =
+  const isFromThisCol = selectedSource?.type === 'columnStack' && selectedSource.col === columnIndex
+
+  // 通常カード: 空列 or 最上位が同カテゴリの通常カード（カテゴリカードの上は不可）
+  const canStackNormal =
     selectedCard?.data.type === 'normal' &&
-    !(selectedSource?.type === 'columnStack' && selectedSource.col === columnIndex) &&
+    !isFromThisCol &&
     (
       cards.length === 0 ||
-      (bottomCard !== null && bottomCard.data.categoryId === selectedCard.data.categoryId)
+      (bottomCard !== null && bottomCard.data.type === 'normal' && bottomCard.data.categoryId === selectedCard.data.categoryId)
     )
+
+  // カテゴリカード: 非空列かつ最上位が同カテゴリの通常カード
+  const selectedCatId = selectedCard?.data.type === 'category'
+    ? allCategories.find(cat => cat.name === selectedCard.data.text)?.id
+    : undefined
+
+  const canStackCategory =
+    selectedCard?.data.type === 'category' &&
+    !isFromThisCol &&
+    cards.length > 0 &&
+    bottomCard !== null &&
+    bottomCard.data.type === 'normal' &&
+    selectedCatId !== undefined &&
+    bottomCard.data.categoryId === selectedCatId
+
+  const canStackHere = canStackNormal || canStackCategory
 
   const handleStackAreaClick = () => {
     if (!selectedCard) return
@@ -95,7 +119,6 @@ export function CardStack({ columnIndex, cards, slot, hintedCardInstanceId }: Ca
   const isDropTarget = canPlaceToSlot || canStackHere
   const hintsEnabled = (gameState?.stageId ?? 1) === 1
 
-  const allCategories = useGameStore(s => s.allCategories)
   // カテゴリカード用: allCategories とスロットのインデックス対応でロック中でも取得可
   const categoryNameToTotal = new Map<string, number>()
   const slots = gameState?.categorySlots ?? []

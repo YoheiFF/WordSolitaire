@@ -1,67 +1,70 @@
 'use client'
 
 import React from 'react'
-import { Button } from '@/components/ui/Button'
 import { useGameStore } from '@/store/gameStore'
+import { spendCoins } from '@/lib/coins'
 
 interface BoosterBarProps {
-  hintUsed: number
-  maxHints: number
-  historyCount: number
+  coins: number
+  onCoinsChange: () => void
 }
 
-export function BoosterBar({ hintUsed, maxHints, historyCount }: BoosterBarProps) {
-  const { useHint, undoLastAction, clearHint } = useGameStore()
+const BOOSTERS = [
+  { label: '+5手', icon: '⏱️', amount: 5, cost: 30 },
+  { label: '+10手', icon: '⏰', amount: 10, cost: 50 },
+  { label: 'シャッフル', icon: '🔀', amount: null, cost: 100 },
+] as const
 
-  const hintsLeft = maxHints - hintUsed
-  const canHint = hintsLeft > 0
-  const canUndo = historyCount > 0
+export function BoosterBar({ coins, onCoinsChange }: BoosterBarProps) {
+  const { addMoves, shuffleColumns } = useGameStore()
 
-  const handleHint = () => {
-    clearHint()
-    useHint()
+  const handleAddMoves = (amount: number, cost: number) => {
+    if (!spendCoins(cost)) return
+    addMoves(amount)
+    onCoinsChange()
+  }
+
+  const handleShuffle = (cost: number) => {
+    if (!spendCoins(cost)) return
+    shuffleColumns()
+    onCoinsChange()
   }
 
   return (
     <div className="flex items-center justify-around w-full gap-2 py-2">
-      {/* ヒントボタン */}
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={handleHint}
-        disabled={!canHint}
-        className="flex-1 flex flex-col items-center gap-0.5 !py-2 !min-h-0"
-      >
-        <span className="text-lg">💡</span>
-        <span className="text-xs text-green-700 font-medium">
-          ヒント ({hintsLeft}/{maxHints})
-        </span>
-      </Button>
+      {BOOSTERS.map((b) => {
+        const canUse = coins >= b.cost
+        const onClick = () => {
+          if (b.amount !== null) {
+            handleAddMoves(b.amount, b.cost)
+          } else {
+            handleShuffle(b.cost)
+          }
+        }
 
-      {/* アンドゥボタン */}
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={undoLastAction}
-        disabled={!canUndo}
-        className="flex-1 flex flex-col items-center gap-0.5 !py-2 !min-h-0"
-      >
-        <span className="text-lg">↩️</span>
-        <span className="text-xs text-green-700 font-medium">
-          1つ戻る ({historyCount})
-        </span>
-      </Button>
-
-      {/* 特殊ブースター（MVP: グレーアウト） */}
-      <Button
-        variant="secondary"
-        size="sm"
-        disabled
-        className="flex-1 flex flex-col items-center gap-0.5 !py-2 !min-h-0 opacity-40"
-      >
-        <span className="text-lg">⚡</span>
-        <span className="text-xs text-green-700 font-medium">特殊</span>
-      </Button>
+        return (
+          <button
+            key={b.label}
+            onClick={onClick}
+            disabled={!canUse}
+            className={`
+              flex-1 flex flex-col items-center gap-0.5 py-2 px-1 rounded-xl border transition-all
+              ${canUse
+                ? 'bg-yellow-500/15 border-yellow-400/50 active:scale-95'
+                : 'bg-white/5 border-white/10 opacity-40 cursor-not-allowed'
+              }
+            `}
+          >
+            <span className="text-xl">{b.icon}</span>
+            <span className={`text-xs font-bold ${canUse ? 'text-white' : 'text-white/50'}`}>
+              {b.label}
+            </span>
+            <span className={`text-[10px] ${canUse ? 'text-yellow-300' : 'text-white/30'}`}>
+              🪙 {b.cost}
+            </span>
+          </button>
+        )
+      })}
     </div>
   )
 }

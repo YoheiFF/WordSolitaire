@@ -11,7 +11,7 @@ import { BoosterBar } from './BoosterBar'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { DragOverlay } from '@/components/ui/DragOverlay'
-import { useGameStore, selectHistory } from '@/store/gameStore'
+import { useGameStore } from '@/store/gameStore'
 import { saveProgress } from '@/lib/api'
 import { useBgm } from '@/hooks/useBgm'
 import { addCoins, calcClearCoins, getCoins } from '@/lib/coins'
@@ -32,7 +32,6 @@ export function GameContainer() {
   const router = useRouter()
   const gameState = useGameStore((s) => s.gameState)
   const hint = useGameStore((s) => s.hint)
-  const history = useGameStore(selectHistory)
   const { resetGame, clearHint } = useGameStore()
   const [coins, setCoins] = React.useState(0)
 
@@ -143,9 +142,8 @@ export function GameContainer() {
       {/* ブースターバー */}
       <div className="px-1">
         <BoosterBar
-          hintUsed={gameState.hintUsed}
-          maxHints={gameState.maxHints}
-          historyCount={history.length}
+          coins={coins}
+          onCoinsChange={() => setCoins(getCoins())}
         />
       </div>
 

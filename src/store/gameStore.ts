@@ -20,6 +20,8 @@ import {
   getHint,
   checkGameEnd,
   resetFilledSlot,
+  addMovesToGame,
+  shuffleColumnCards,
 } from '@/lib/gameLogic'
 
 const MAX_HISTORY = 10
@@ -48,6 +50,8 @@ interface GameStore {
   clearHint: () => void
   resetGame: () => void
   resetFilledSlot: (slotIndex: number) => void
+  addMoves: (amount: number) => void
+  shuffleColumns: () => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
 }
@@ -246,6 +250,27 @@ export const useGameStore = create<GameStoreInternal>()(
       set((draft) => {
         const newState = resetFilledSlot(gameState, slotIndex)
         draft.gameState = newState as unknown as typeof draft.gameState
+      })
+    },
+
+    addMoves: (amount: number) => {
+      const { gameState } = get()
+      if (!gameState || gameState.status !== 'playing') return
+
+      set((draft) => {
+        const newState = addMovesToGame(gameState, amount)
+        draft.gameState = newState as unknown as typeof draft.gameState
+      })
+    },
+
+    shuffleColumns: () => {
+      const { gameState } = get()
+      if (!gameState || gameState.status !== 'playing') return
+
+      set((draft) => {
+        const newState = shuffleColumnCards(gameState)
+        draft.gameState = newState as unknown as typeof draft.gameState
+        draft.hint = null
       })
     },
 

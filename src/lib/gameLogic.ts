@@ -616,6 +616,47 @@ export function checkGameEnd(
 }
 
 /**
+ * 手数追加ブースター
+ * movesLeft と maxMoves に amount を加算する。手数消費なし（コインで購入）。
+ */
+export function addMovesToGame(state: GameState, amount: number): GameState {
+  return {
+    ...state,
+    movesLeft: state.movesLeft + amount,
+    maxMoves: state.maxMoves + amount,
+  }
+}
+
+/**
+ * シャッフルブースター
+ * 全列スタックのカードを混ぜ合わせ、元の列ごとの枚数を維持して再配布する。
+ * 各列の最上位カードを表向きにする。手数消費なし（コインで購入）。
+ */
+export function shuffleColumnCards(state: GameState): GameState {
+  const columnSizes = state.columnStacks.map((col) => col.length)
+  const allCards = state.columnStacks.flat()
+  if (allCards.length === 0) return state
+
+  const shuffled = fisherYatesShuffle(allCards)
+  let offset = 0
+  const newColumns = columnSizes.map((size) => {
+    const col = shuffled.slice(offset, offset + size)
+    offset += size
+    return col.map((c, i) => ({
+      ...c,
+      face: i === col.length - 1 ? ('face_up' as const) : ('face_down' as const),
+    }))
+  })
+
+  return {
+    ...state,
+    columnStacks: newColumns,
+    selectedCard: null,
+    selectedCardSource: null,
+  }
+}
+
+/**
  * アンドゥ
  * 履歴スタックから前のGameStateを復元する。
  */

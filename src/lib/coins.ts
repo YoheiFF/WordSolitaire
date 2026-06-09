@@ -12,6 +12,13 @@ export function addCoins(amount: number): number {
   return next
 }
 
+export function spendCoins(amount: number): boolean {
+  const current = getCoins()
+  if (current < amount) return false
+  localStorage.setItem(COINS_KEY, String(current - amount))
+  return true
+}
+
 /** クリア時の獲得コイン内訳を計算 */
 export function calcClearCoins(stageId: number, movesLeft: number): {
   levelBonus: number

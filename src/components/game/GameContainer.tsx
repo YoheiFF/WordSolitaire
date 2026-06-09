@@ -14,6 +14,7 @@ import { DragOverlay } from '@/components/ui/DragOverlay'
 import { useGameStore, selectHistory } from '@/store/gameStore'
 import { saveProgress } from '@/lib/api'
 import { useBgm } from '@/hooks/useBgm'
+import { addCoins, calcClearCoins } from '@/lib/coins'
 
 const PLAYER_ID_KEY = 'word-solitaire-player-id'
 
@@ -51,6 +52,13 @@ export function GameContainer() {
       cleared: gameState.status === 'cleared',
       movesRemaining: gameState.movesLeft,
     }).catch(console.error)
+  }, [gameState?.status])
+
+  // クリア時にコインを付与（status が cleared に変化したとき1回だけ）
+  useEffect(() => {
+    if (gameState?.status !== 'cleared') return
+    const { total } = calcClearCoins(gameState.stageId, gameState.movesLeft)
+    addCoins(total)
   }, [gameState?.status])
 
   if (!gameState) return null
@@ -137,33 +145,58 @@ export function GameContainer() {
 
       {/* クリアモーダル */}
       <Modal isOpen={isCleared} title="クリア！">
-        <div className="flex flex-col items-center gap-4">
-          <p className="text-6xl">🎉</p>
-          <p className="text-gray-600 text-center">
-            おめでとうございます！<br />
-            残り手数: <span className="font-bold text-green-600">{gameState.movesLeft}</span>
-          </p>
-          {gameState.stageId < 30 ? (
-            <Button
-              variant="primary"
-              size="md"
-              onClick={() => router.push(`/play/${gameState.stageId + 1}`)}
-              className="w-full"
-            >
-              次のステージへ ▶
-            </Button>
-          ) : (
-            <p className="text-yellow-600 font-bold text-center">🏆 全ステージクリア！</p>
-          )}
-          <div className="flex gap-3 w-full">
-            <Button variant="secondary" size="md" onClick={handleGoHome} className="flex-1">
-              ホームへ
-            </Button>
-            <Button variant="secondary" size="md" onClick={handleRetry} className="flex-1">
-              もう一度
-            </Button>
-          </div>
-        </div>
+        {(() => {
+          const coins = isCleared ? calcClearCoins(gameState.stageId, gameState.movesLeft) : null
+          return (
+            <div className="flex flex-col items-center gap-4">
+              <p className="text-6xl">🎉</p>
+              <p className="text-gray-600 text-center">
+                おめでとうございます！<br />
+                残り手数: <span className="font-bold text-green-600">{gameState.movesLeft}</span>
+              </p>
+
+              {/* コイン獲得内訳 */}
+              {coins && (
+                <div className="w-full bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 space-y-1">
+                  <p className="text-yellow-700 font-bold text-sm text-center mb-2">🪙 コイン獲得！</p>
+                  <div className="flex justify-between text-sm text-yellow-700">
+                    <span>Lv.{gameState.stageId} ボーナス</span>
+                    <span className="font-semibold">+{coins.levelBonus}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-yellow-700">
+                    <span>残り{gameState.movesLeft}手ボーナス</span>
+                    <span className="font-semibold">+{coins.movesBonus}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-bold text-yellow-800 border-t border-yellow-200 pt-1 mt-1">
+                    <span>合計</span>
+                    <span>+{coins.total} コイン</span>
+                  </div>
+                </div>
+              )}
+
+              {gameState.stageId < 30 ? (
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={() => router.push(`/play/${gameState.stageId + 1}`)}
+                  className="w-full"
+                >
+                  次のステージへ ▶
+                </Button>
+              ) : (
+                <p className="text-yellow-600 font-bold text-center">🏆 全ステージクリア！</p>
+              )}
+              <div className="flex gap-3 w-full">
+                <Button variant="secondary" size="md" onClick={handleGoHome} className="flex-1">
+                  ホームへ
+                </Button>
+                <Button variant="secondary" size="md" onClick={handleRetry} className="flex-1">
+                  もう一度
+                </Button>
+              </div>
+            </div>
+          )
+        })()}
       </Modal>
 
       {/* 失敗モーダル */}

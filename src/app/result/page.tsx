@@ -4,6 +4,7 @@ import React, { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useGameStore } from '@/store/gameStore'
 import { Button } from '@/components/ui/Button'
+import { calcClearCoins } from '@/lib/coins'
 
 export default function ResultPage() {
   const router = useRouter()
@@ -22,6 +23,7 @@ export default function ResultPage() {
   }
 
   const isCleared = gameState.status === 'cleared'
+  const coins = isCleared ? calcClearCoins(gameState.stageId, gameState.movesLeft) : null
 
   const handleRetry = () => {
     resetGame()
@@ -46,6 +48,25 @@ export default function ResultPage() {
             : '手数が尽きてしまいました。リトライしましょう！'}
         </p>
       </div>
+
+      {/* コイン獲得（クリア時のみ） */}
+      {coins && (
+        <div className="w-full bg-yellow-900/40 border border-yellow-500/40 rounded-2xl px-5 py-4 space-y-2">
+          <p className="text-yellow-300 font-bold text-sm text-center">🪙 コイン獲得！</p>
+          <div className="flex justify-between text-sm text-yellow-200">
+            <span>Lv.{gameState.stageId} ボーナス</span>
+            <span className="font-semibold">+{coins.levelBonus}</span>
+          </div>
+          <div className="flex justify-between text-sm text-yellow-200">
+            <span>残り{gameState.movesLeft}手ボーナス</span>
+            <span className="font-semibold">+{coins.movesBonus}</span>
+          </div>
+          <div className="flex justify-between text-sm font-bold text-yellow-300 border-t border-yellow-500/40 pt-2 mt-1">
+            <span>合計</span>
+            <span>+{coins.total} コイン</span>
+          </div>
+        </div>
+      )}
 
       {/* スコア表示 */}
       <div className="w-full bg-green-900/60 rounded-2xl p-5 space-y-3">

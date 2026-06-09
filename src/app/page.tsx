@@ -7,6 +7,7 @@ import { fetchStageList, fetchProgress } from '@/lib/api'
 import type { StageListItem, ProgressRecord } from '@/types/game'
 import { SplashScreen } from '@/components/ui/SplashScreen'
 import { Button } from '@/components/ui/Button'
+import { getCoins } from '@/lib/coins'
 
 const PLAYER_ID_KEY = 'word-solitaire-player-id'
 
@@ -25,8 +26,10 @@ export default function HomePage() {
   const [progressMap, setProgressMap] = useState<Map<number, ProgressRecord>>(new Map())
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [totalCoins, setTotalCoins] = useState(0)
 
   useEffect(() => {
+    setTotalCoins(getCoins())
     const playerId = getOrCreatePlayerId()
     // スプラッシュを最低1秒表示するため、データ取得と並行してタイマーを走らせる
     const minDisplay = new Promise<void>((res) => setTimeout(res, 1000))
@@ -61,6 +64,12 @@ export default function HomePage() {
         <p className="text-green-200 text-sm mt-2">
           カードを分類してステージをクリアしよう！
         </p>
+        {/* 所持コイン */}
+        <div className="inline-flex items-center gap-1.5 mt-3 bg-yellow-500/20 border border-yellow-400/40 rounded-full px-4 py-1">
+          <span className="text-lg">🪙</span>
+          <span className="text-yellow-300 font-bold text-base">{totalCoins.toLocaleString()}</span>
+          <span className="text-yellow-400/70 text-xs">コイン</span>
+        </div>
       </div>
 
       {/* 遊び方 */}
